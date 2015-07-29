@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>IE9でのdisplay none blockの挙動がおかしいかもしれない件について</title>
+        <style>
+            h1 { font-size: 1.2em; }
+            p { line-height: 1.5em; margin: 0.2em; }
+            p.author {margin-top: 30px;}
+            div.wrapper { margin: 1em; }
+            div.controller { margin-bottom: 1em; }
+            div.on { display: block; }
+            div.off { display: none; }
+        </style>
+    </head>
+    <body>
+        <h1>IE9ではレンダリングに要素が display:none だった場合は子要素を読み込んでいないかもしれない</h1>
+        <p>画像を選択して切り替えるような処理が以下のようにされている場合、IE9では選択された画像が表示されなかった。</p>
+        <p>このサンプルでは、画像を囲むdivのCSSを直接マークアップしている。</p>
+        <div id="example-1" class="wrapper">
+            <div class="controller">
+                <label for="changer-1">画像の切り替え</label>
+                <select name="example-1" id="changer-1">
+                    <option value="1" data-image-number="1">image 1</option>
+                    <option value="2" data-image-number="2">image 2</option>
+                    <option value="3" data-image-number="3">image 3</option>
+                </select>
+            </div>
+            <div class="images">
+                <div data-image-number="1" class="on" ><img src="images/1.jpg" alt="" /></div>
+                <div data-image-number="2" class="off"><img src="images/2.jpg" alt="" /></div>
+                <div data-image-number="3" class="off"><img src="images/3.jpg" alt="" /></div>
+            </div>
+        </div>
+        <p>そこで、マークアップではdisplayを指定せず、HTMLレンダリング後にdisplay:noneを付与するようにした。</p>
+        <p>このサンプルは、IE9で正常に動作した。</p>
+        <div id="example-2" class="wrapper">
+            <div class="controller">
+                <label for="changer-2">画像の切り替え</label>
+                <select name="example-2" id="changer-2">
+                    <option value="1" data-image-number="1">image 1</option>
+                    <option value="2" data-image-number="2">image 2</option>
+                    <option value="3" data-image-number="3">image 3</option>
+                </select>
+            </div>
+            <div class="images">
+                <div data-image-number="1"><img src="images/1.jpg" alt="" /></div>
+                <div data-image-number="2"><img src="images/2.jpg" alt="" /></div>
+                <div data-image-number="3"><img src="images/3.jpg" alt="" /></div>
+            </div>
+        </div>
+        <p>他のブラウザ or IE10以上ではどちらも正常に動作する。IE8以下は未検証。</p>
+        <p>もしかするとIE9は要素の初期状態が display:none の場合、子要素を読み込んでいないのではないか？</p>
+        <p>いずれにせよ、同様の現象は後者の実装で回避することができる可能性がある。</p>
+        <p class="author"><small>Created by: <a href="http://www.bathtimefish.com">BathTimeFish</a></small></p>
+        <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script>
+            $('select[name="example-1"]').change(function(e) {
+                var number = $('select[name="example-1"] option:selected').data("image-number");
+                $('div#example-1 div.images').children().each(function() {
+                    if (parseInt($(this).data("image-number")) === parseInt(number)) {
+                        $(this).removeClass("off");
+                        $(this).addClass("on");
+                    } else {
+                        $(this).removeClass("on");
+                        $(this).addClass("off");
+                    }
+                });
+            });
+        </script>
+        <script>
+            // initialize
+            var elCount = 0;
+            $('div#example-2 div.images').children().each(function() {
+                if(elCount === 0) {
+                    $(this).addClass("on");
+                } else {
+                    $(this).addClass("off")
+                }
+                elCount++;
+            });
+            $('select[name="example-2"]').change(function(e) {
+                var number = $('select[name="example-2"] option:selected').data("image-number");
+                $('div#example-2 div.images').children().each(function() {
+                    if (parseInt($(this).data("image-number")) === parseInt(number)) {
+                        $(this).removeClass("off");
+                        $(this).addClass("on");
+                    } else {
+                        $(this).removeClass("on");
+                        $(this).addClass("off");
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
